@@ -14,3 +14,5 @@ data/test/tests.jsonl
 adapter/runs/
 probe/caches/
 probe/generation/
+data/viquad2_probe/
+probe/runs/qwen3-4b-viquad2/

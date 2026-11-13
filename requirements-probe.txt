@@ -1,0 +1,7 @@
+numpy
+torch
+transformers>=4.51.0
+accelerate
+datasets
+huggingface-hub
+wandb
