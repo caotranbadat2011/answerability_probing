@@ -39,8 +39,10 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, default=Path("data/viquad2_probe"))
     parser.add_argument("--train-split", default="train")
     parser.add_argument("--validation-split", default="validation")
+    parser.add_argument("--test-split", default="test")
     parser.add_argument("--max-train", type=int, default=0, help="0 keeps all rows")
     parser.add_argument("--max-validation", type=int, default=0, help="0 keeps all rows")
+    parser.add_argument("--max-test", type=int, default=0, help="0 keeps all rows")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -48,6 +50,7 @@ def main() -> None:
     requested = {
         "train": (args.train_split, args.max_train),
         "validation": (args.validation_split, args.max_validation),
+        "test": (args.test_split, args.max_test),
     }
     args.output_dir.mkdir(parents=True, exist_ok=True)
     manifest = {"dataset": args.dataset, "seed": args.seed, "splits": {}}

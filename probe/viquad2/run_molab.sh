@@ -11,7 +11,7 @@ PREPARE_ARGS=()
 EXTRACT_ARGS=()
 
 if [[ "$PILOT" == "1" ]]; then
-  PREPARE_ARGS+=(--max-train 400 --max-validation 200)
+  PREPARE_ARGS+=(--max-train 400 --max-validation 200 --max-test 200)
   EXTRACT_ARGS+=(--limit 0)
 fi
 
@@ -44,7 +44,21 @@ python probe/viquad2/train_probe.py \
   --train-cache "$CACHE_ROOT/train" \
   --validation-cache "$CACHE_ROOT/validation" \
   --out "$OUTPUT_DIR" \
-  --target-refusal-recall 0.90 \
+  --min-answerable-accuracy "${MIN_ANSWERABLE_ACCURACY:-0.85}" \
+  "${WANDB_ARGS[@]}"
+
+# The test split is touched only after layer, L2, and threshold are frozen.
+python probe/viquad2/extract_activations.py \
+  --input "$DATA_DIR/test.jsonl" \
+  --out "$CACHE_ROOT/test" \
+  --model "$MODEL" \
+  --require-gpu \
+  "${EXTRACT_ARGS[@]}"
+
+python probe/viquad2/evaluate_probe.py \
+  --probe "$OUTPUT_DIR" \
+  --test-cache "$CACHE_ROOT/test" \
+  --out "$OUTPUT_DIR/test_evaluation" \
   "${WANDB_ARGS[@]}"
 
 echo "Probe artifact: $OUTPUT_DIR"

@@ -9,8 +9,10 @@ It deliberately keeps answerability separate from answer generation:
 2. freeze Qwen and cache the final-input-token state after every Transformer block;
 3. fit an L2 logistic regression for every block and regularisation value;
 4. choose the block by AUROC on one half of ViQuAD2 validation;
-5. refit and choose the refusal threshold on the untouched half;
-6. export `probe.npz` and `config.json` for inference.
+5. refit and choose the threshold on the untouched half, requiring a configurable
+   minimum accuracy on answerable questions;
+6. freeze the probe and threshold, then evaluate once on the original test split;
+7. export `probe.npz` and `config.json` for inference.
 
 `hidden_states[0]` is the embedding output and is not treated as a Transformer layer.
 Block `i` is always read from `hidden_states[i + 1]`.
@@ -47,6 +49,7 @@ After the pilot succeeds, use fresh output directories for the full run:
 DATA_DIR=data/viquad2_probe_full \
 CACHE_ROOT=probe/caches/qwen3-4b-viquad2-full \
 OUTPUT_DIR=probe/runs/qwen3-4b-viquad2/full_probe \
+MIN_ANSWERABLE_ACCURACY=0.85 \
 bash probe/viquad2/run_molab.sh
 ```
 
@@ -62,6 +65,14 @@ The selected artifact directory contains:
 - `config.json`: model, block, hidden-state index, threshold, and metrics;
 - `layer_sweep.json`: AUROC for every block/L2 pair;
 - `calibration_predictions.jsonl`: per-question calibration decisions.
+- `test_evaluation/report.json`: metrics using the validation-frozen threshold;
+- `test_evaluation/predictions.jsonl`: per-question test decisions.
+
+The default threshold policy requires at least 85% answerable accuracy on the
+calibration half and, among feasible thresholds, maximises refusal recall. Change
+`MIN_ANSWERABLE_ACCURACY` to make the policy more or less conservative. The test
+split is evaluated only after this choice and never participates in layer, L2, or
+threshold selection.
 
 The 420-question legal evaluation must not be used to choose a layer. If a legal
 development split is available, it may be used later to recalibrate only the

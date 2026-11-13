@@ -74,24 +74,50 @@ def binary_metrics(prob_answerable: np.ndarray, labels: np.ndarray, threshold: f
 def choose_threshold(
     probabilities: np.ndarray,
     labels: np.ndarray,
-    target_refusal_recall: float | None,
+    target_refusal_recall: float | None = None,
+    min_answerable_accuracy: float | None = None,
 ) -> tuple[float, dict]:
+    if target_refusal_recall is not None and min_answerable_accuracy is not None:
+        raise ValueError(
+            "Choose either target_refusal_recall or min_answerable_accuracy, not both"
+        )
     candidates = np.unique(np.concatenate(([0.0], probabilities, [1.0 + 1e-7])))
     scored = [binary_metrics(probabilities, labels, float(t)) for t in candidates]
     feasible = scored
     if target_refusal_recall is not None:
         feasible = [m for m in scored if m["refusal_recall"] >= target_refusal_recall]
+    elif min_answerable_accuracy is not None:
+        feasible = [
+            m for m in scored
+            if m["answerable_accuracy"] >= min_answerable_accuracy
+        ]
     if not feasible:
-        feasible = scored
-    best = max(
-        feasible,
-        key=lambda m: (
-            m["balanced_accuracy"],
-            m["refusal_f1"],
-            m["answerable_accuracy"],
-            -m["threshold"],
-        ),
-    )
+        constraint = (
+            f"refusal_recall >= {target_refusal_recall}"
+            if target_refusal_recall is not None
+            else f"answerable_accuracy >= {min_answerable_accuracy}"
+        )
+        raise ValueError(f"No threshold satisfies {constraint}")
+    if min_answerable_accuracy is not None:
+        best = max(
+            feasible,
+            key=lambda m: (
+                m["refusal_recall"],
+                m["balanced_accuracy"],
+                m["refusal_precision"],
+                m["threshold"],
+            ),
+        )
+    else:
+        best = max(
+            feasible,
+            key=lambda m: (
+                m["balanced_accuracy"],
+                m["refusal_f1"],
+                m["answerable_accuracy"],
+                -m["threshold"],
+            ),
+        )
     return best["threshold"], best
 
 

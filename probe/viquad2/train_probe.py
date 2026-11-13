@@ -84,7 +84,9 @@ def main() -> None:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--l2-values", default="0.0001,0.001,0.01")
     parser.add_argument("--selection-fraction", type=float, default=0.5)
-    parser.add_argument("--target-refusal-recall", type=float, default=0.9)
+    threshold_group = parser.add_mutually_exclusive_group()
+    threshold_group.add_argument("--target-refusal-recall", type=float, default=None)
+    threshold_group.add_argument("--min-answerable-accuracy", type=float, default=0.85)
     parser.add_argument("--class-weight", choices=["none", "balanced"], default="none")
     parser.add_argument("--max-iter", type=int, default=200)
     parser.add_argument("--seed", type=int, default=42)
@@ -156,7 +158,8 @@ def main() -> None:
     threshold, threshold_metrics = choose_threshold(
         calibration_probabilities,
         val_labels[calibration_indices],
-        args.target_refusal_recall,
+        target_refusal_recall=args.target_refusal_recall,
+        min_answerable_accuracy=args.min_answerable_accuracy,
     )
     calibration_auroc = auroc(calibration_probabilities, val_labels[calibration_indices])
     threshold_metrics["auroc"] = calibration_auroc
@@ -189,6 +192,10 @@ def main() -> None:
         "seed": args.seed,
         "selection_auroc": best["selection_auroc"],
         "calibration_metrics": threshold_metrics,
+        "threshold_selection": {
+            "target_refusal_recall": args.target_refusal_recall,
+            "min_answerable_accuracy": args.min_answerable_accuracy,
+        },
     }
     (args.out / "config.json").write_text(
         json.dumps(artifact_config, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -225,6 +232,7 @@ def main() -> None:
                 "layers": train_config["n_layers"],
                 "l2_values": l2_values,
                 "target_refusal_recall": args.target_refusal_recall,
+                "min_answerable_accuracy": args.min_answerable_accuracy,
                 "class_weight": args.class_weight,
                 "seed": args.seed,
             },

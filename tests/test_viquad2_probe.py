@@ -44,6 +44,26 @@ class CalibrationTests(unittest.TestCase):
         self.assertGreaterEqual(metrics["refusal_recall"], 0.90)
         self.assertEqual(binary_metrics(probabilities, labels, threshold), metrics)
 
+    def test_threshold_respects_answerable_accuracy_constraint(self):
+        probabilities = np.asarray([0.05, 0.10, 0.20, 0.70, 0.80, 0.95])
+        labels = np.asarray([0, 0, 0, 1, 1, 1])
+        threshold, metrics = choose_threshold(
+            probabilities,
+            labels,
+            min_answerable_accuracy=2 / 3,
+        )
+        self.assertGreaterEqual(metrics["answerable_accuracy"], 2 / 3)
+        self.assertEqual(binary_metrics(probabilities, labels, threshold), metrics)
+
+    def test_threshold_constraints_are_mutually_exclusive(self):
+        with self.assertRaises(ValueError):
+            choose_threshold(
+                np.asarray([0.1, 0.9]),
+                np.asarray([0, 1]),
+                target_refusal_recall=0.9,
+                min_answerable_accuracy=0.9,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
