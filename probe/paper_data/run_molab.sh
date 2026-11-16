@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO_ROOT"
+export PYTHONPATH="$REPO_ROOT/probe/probing${PYTHONPATH:+:$PYTHONPATH}"
+
 MODEL="${MODEL:-Qwen/Qwen3-4B-Instruct-2507}"
 CACHE_ROOT="${CACHE_ROOT:-probe/caches/qwen3-4b-paper-data}"
 OUTPUT_DIR="${OUTPUT_DIR:-probe/runs/qwen3-4b-paper-data}"
