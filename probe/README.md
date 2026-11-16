@@ -6,6 +6,11 @@ question, no instruction). The submitted probe is trained on TyDiQA and UDHR (46
 one threshold, fitted on held-out UDHR items (`submission/README.md`). We chose it over the
 TyDi-only probe with a paired bootstrap over held-out UDHR items (`arms.json`).
 
+For a Molab-ready Qwen3-4B adaptation that rebuilds the same TyDiQA+UDHR
+training data and preserves the paper's item-fold calibration protocol, see
+[`paper_data/README.md`](paper_data/README.md). The separate ViQuAD2 experiment
+remains in [`viquad2/README.md`](viquad2/README.md).
+
 ```
 probing/      extraction, probes, evaluation, controls
 runs/         drivers and the committed result records
