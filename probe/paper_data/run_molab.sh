@@ -22,7 +22,7 @@ if [[ "${WANDB_ENABLED:-0}" == "1" ]]; then
 fi
 
 echo "=== Prepare the paper datasets: TyDiQA + UDHR ==="
-python data/fetch_sources.py --only tydiqa mist-test
+python data/fetch_sources.py --only tydiqa mist-sample mist-test
 python data/extract_qa_templates.py
 python data/tydi/build_tydiqa.py
 python data/udhr/build_rows.py
